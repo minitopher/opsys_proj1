@@ -69,6 +69,11 @@ int main(int argc, char* argv[]){
 		}
 	}
 	std::cout << processes.size() << std::endl;
+	/*		SHOWS THAT GET FUNCTIONS WORK
+	for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
+		std::cout << it->getPROC() << std::endl;
+	}
+	*/
 	
 	//something something output file idk
 }

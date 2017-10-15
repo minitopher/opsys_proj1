@@ -12,4 +12,6 @@ void Process::add_process(const char PROC, const int INIT, const int CPU, const 
     NUM_BURST = NUM;
     IO_TIME = IO;
 }
+
+
 //Some useful shit should probably go here, idk
