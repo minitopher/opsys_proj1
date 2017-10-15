@@ -64,7 +64,7 @@ int main(int argc, char* argv[]){
 			
 			Process* p = new Process();
 			p->add_process(PROC, INIT,CPU,NUM,IO);
-			processes.push_back(p);
+			processes.push_back(*p);
 
 		}
 	}
