@@ -4,8 +4,32 @@
 #include <stdlib.h>
 #include <string>
 #include<cstdlib>
+#include <limits>
 
 #include "process.h"
+
+std::vector<Process>::iterator getSRT(std::vector<Process> queue){
+	std::vector<Process>::iterator shortest;
+	int SRT = std::numeric_limits<int>::max();
+	for(std::vector<Process>::iterator it = queue.begin(); it != queue.end(); it++){
+		//FIND FIRST ONE THAT ARRIVES FIRST
+		if(it->getCPU() < SRT){
+			shortest = it;
+		}
+	}
+	return shortest;
+}
+
+int totaltime(std::vector<Process> queue){
+	int Longest = 0;
+	for(std::vector<Process>::iterator it = queue.begin(); it != queue.end(); it++){
+		//FIND FIRST ONE THAT ARRIVES FIRST
+		if(it->getTime() > Longest){
+			Longest = it->getTime();
+		}
+	}
+	return Longest;
+}
 
 int main(int argc, char* argv[]){
 	//argv[1] should be the input file, and (i think?) argv[2] should be output file
@@ -74,6 +98,36 @@ int main(int argc, char* argv[]){
 		std::cout << it->getPROC() << std::endl;
 	}
 	*/
+	
+	//SHORTEST REMAINING TIME
+	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
+	std::vector<Process> readyQueue;
+	int i = totaltime(processes);
+	while (i > 0){
+		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
+			if(it->getINIT() == 0){
+				bool found = false;
+				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
+					if(it->getPROC() == check->getPROC()){
+						found = true;
+					}
+				}
+				if(found == false){
+					readyQueue.push_back(*it);
+					std::cout << it->getPROC() << std::endl;
+				}
+			}
+			else{
+				it->subINIT();
+			}
+		}
+		
+		std::vector<Process>::iterator holder = getSRT(processes);
+		
+		
+		i--;
+	}
+	
 	
 	//something something output file idk
 }

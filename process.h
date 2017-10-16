@@ -25,6 +25,12 @@ class Process{
 		int getIO(){
 			return IO_TIME;
 		}
+		int getTime(){
+			return INIT_ARR + CPU_BURST + NUM_BURST + IO_TIME;
+		}
+		void subINIT(){
+			INIT_ARR -= 1;
+		}
 		
 	private : 
 		char PROC_ID;
