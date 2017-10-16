@@ -26,10 +26,22 @@ class Process{
 			return IO_TIME;
 		}
 		int getTime(){
-			return INIT_ARR + CPU_BURST + NUM_BURST + IO_TIME;
+			return INIT_ARR + (CPU_BURST * NUM_BURST) + (IO_TIME * NUM_BURST);
 		}
 		void subINIT(){
 			INIT_ARR -= 1;
+		}
+		void subCPU(){
+			CPU_BURST -= 1;
+		}
+		void subNUM(){
+			NUM_BURST -= 1;
+		}
+		void replaceCPU(){
+			CPU_BURST = CPU_REPLACE;
+		}
+		void replaceINIT(){
+			INIT_ARR = INIT_REPLACE;
 		}
 		
 	private : 
@@ -38,4 +50,6 @@ class Process{
 		int CPU_BURST;
 		int NUM_BURST;
 		int IO_TIME;
+		int CPU_REPLACE;
+		int INIT_REPLACE;
 };

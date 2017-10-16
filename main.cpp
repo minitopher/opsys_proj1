@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
 			std::vector<char> arr;
 			
 			PROC = line[0];
-			int i = 3;
+			int i = 2;
 
 			while (line[i] != '|'){
 				arr.push_back(line[i]);
@@ -92,17 +92,19 @@ int main(int argc, char* argv[]){
 
 		}
 	}
-	std::cout << processes.size() << std::endl;
-	/*		SHOWS THAT GET FUNCTIONS WORK
+	//std::cout << processes.size() << std::endl;
+	/*	//SHOWS THAT GET FUNCTIONS WORK
 	for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
-		std::cout << it->getPROC() << std::endl;
+		std::cout << it->getINIT() << std::endl;
 	}
 	*/
+	
 	
 	//SHORTEST REMAINING TIME
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	std::vector<Process> readyQueue;
-	int i = totaltime(processes);
+	//int i = totaltime(processes);
+	int i = 100000;
 	while (i > 0){
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
 			if(it->getINIT() == 0){
@@ -114,15 +116,48 @@ int main(int argc, char* argv[]){
 				}
 				if(found == false){
 					readyQueue.push_back(*it);
-					std::cout << it->getPROC() << std::endl;
+					std::cout << it->getPROC() << " ADDED TO READY QUEUE" << std::endl;
 				}
 			}
 			else{
 				it->subINIT();
 			}
 		}
+		//CPU BURST
+		std::vector<Process>::iterator holder = readyQueue.begin();
+		std::vector<Process>::iterator finder;
+		if(holder != readyQueue.end()){
+			//std::cout << holder->getPROC() << " IS HOLDER" << std::endl;
+			if(holder->getCPU() != 0){
+				holder->subCPU();
+				if(holder->getCPU() == 0){
+					if(holder->getNUM() == 1){
+						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST" << std::endl;
+						for(finder = processes.begin(); finder != processes.end(); finder++){
+							if(finder->getPROC() == holder->getPROC()){
+								processes.erase(finder);
+							}
+							std::cout<< "ERASED" << std::endl;
+						}
+						readyQueue.erase(holder);
+					}
+					else{
+						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST BUT NEEDS MORE" << holder->getNUM() << std::endl;
+						for(finder = processes.begin(); finder != processes.end(); finder++){
+							if(finder->getPROC() == holder->getPROC()){
+								finder->replaceCPU();
+								finder->subNUM();
+								finder->replaceINIT();
+							}
+						}
+						readyQueue.erase(holder);
+					}
+				}
+			}
+		}
+
 		
-		std::vector<Process>::iterator holder = getSRT(processes);
+		//std::vector<Process>::iterator holder = getSRT(readyQueue);
 		
 		
 		i--;
