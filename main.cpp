@@ -8,35 +8,31 @@
 
 #include "process.h"
 
-std::vector<Process>::iterator getSRT(std::vector<Process> queue){
-	std::vector<Process>::iterator shortest;
-	int SRT = std::numeric_limits<int>::max();
+int getSRT(std::vector<Process> queue, int newTime){
+	int location = 0;
 	for(std::vector<Process>::iterator it = queue.begin(); it != queue.end(); it++){
-		//FIND FIRST ONE THAT ARRIVES FIRST
-		if(it->getCPU() < SRT){
-			shortest = it;
+		//FIND WHERE NEWTIME FITS INTO THE QUEUE
+		if(it->getCPU() < newTime){
+			location++;
 		}
 	}
-	return shortest;
+	return location;
 }
 
 int totaltime(std::vector<Process> queue){
 	int Longest = 0;
 	for(std::vector<Process>::iterator it = queue.begin(); it != queue.end(); it++){
-		//FIND FIRST ONE THAT ARRIVES FIRST
-		if(it->getTime() > Longest){
-			Longest = it->getTime();
-		}
+		//FIND THE MAXIMAL TOTAL TIME NEEDED
+		Longest += it->getTime();
 	}
 	return Longest;
 }
 
-void FCFS(std::vector<Process> processes){
+void FCFS(std::vector<Process> &processes){
 	//First come first serve
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	std::vector<Process> readyQueue;
-	//int i = totaltime(processes);
-	int i = 100000;
+	int i = totaltime(processes);
 	while (i > 0){
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
 			if(it->getINIT() == 0){
@@ -66,20 +62,100 @@ void FCFS(std::vector<Process> processes){
 				
 				if(holder->getCPU() == 0){					//checks to see that the current holder is 0, goes through the process of deleting it
 				
-					if(holder->getNUM() == 1){				//if the number of processes is 1 continue on
-						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST" << std::endl;
-						
+					if(holder->getNUM() == 1){				//if the number of processes is 1 continue on						
 						for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
-							if(finder->getPROC() == holder->getPROC()){								//if those are the same, erase 
-								processes.erase(finder);
+							if(finder->getPROC() == holder->getPROC()){
+								std::cout<< finder->getPROC() << " HAS FINISHED BEING PROCESSED" << std::endl;
+								processes.erase(finder);  //if those are the same, erase 
 								break;
 							}
-							std::cout<< "ERASED" << std::endl;
 						}
 						readyQueue.erase(holder);
 					}
 					else{
-						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST BUT NEEDS MORE" << holder->getNUM() << std::endl;
+						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST BUT NEEDS MORE (" << holder->getNUM() - 1<< ") TIMES"<< std::endl;
+						for(finder = processes.begin(); finder != processes.end(); finder++){
+							if(finder->getPROC() == holder->getPROC()){
+								finder->replaceCPU();
+								finder->subNUM();
+								finder->replaceINIT();
+							}
+						}
+						readyQueue.erase(holder);
+					}
+				}
+			}
+		}
+		
+		i--;
+	}
+}
+void ShortestRemainingTime(std::vector<Process> processes){
+	//Shortest Remaining Time
+	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
+	std::vector<Process> readyQueue;
+	int i = totaltime(processes);
+	while (i > 0){
+		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
+			if(it->getINIT() == 0){
+				bool found = false;
+				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
+					if(it->getPROC() == check->getPROC()){
+						found = true;
+					}
+				}
+				if(found == false){
+					if( readyQueue.begin() == readyQueue.end()){		//if theres nothing in the queue yet just add it to the beginning
+						readyQueue.push_back(*it);
+					}
+					else{
+						int location = getSRT(readyQueue, it ->getCPU());		//find where the new process belongs in the queue
+						if (location == 0){										//If it ends up being the shortest amount of time, just add it to the front
+							std::vector<Process>::iterator iter = readyQueue.begin();
+							readyQueue.insert(iter, *it);
+						}
+						else{
+							int count = 1;											//Else find that location and insert dat boi
+							for(std::vector<Process>::iterator iter = readyQueue.begin(); iter != readyQueue.end(); iter++){
+								if(location == count){							
+									iter++;
+									readyQueue.insert(iter, *it);
+									break;
+								}
+								count++;
+							}
+						}
+					}
+					std::cout << it->getPROC() << " ADDED TO READY QUEUE" << std::endl;
+				}
+			}
+			else{
+				it->subINIT();
+			}
+		}
+		//CPU BURST
+		std::vector<Process>::iterator holder = readyQueue.begin();		
+		std::vector<Process>::iterator finder;
+		
+		if(holder != readyQueue.end()){						//while holder doesnt reach the end of the queue
+
+			if(holder->getCPU() != 0){						//checks the current holder iterator and sees the remaining CPU time, continues if not 0
+				holder->subCPU();							//subtracts 1 from the CPU burst time remaining
+				
+				if(holder->getCPU() == 0){					//checks to see that the current holder is 0, goes through the process of deleting it
+				
+					if(holder->getNUM() == 1){				//if the number of processes is 1 continue on						
+						for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
+							if(finder->getPROC() == holder->getPROC()){
+								std::cout<< finder->getPROC() << " HAS FINISHED BEING PROCESSED" << std::endl;
+								processes.erase(finder);  //if those are the same, erase 
+								break;
+							}
+						}
+						readyQueue.erase(holder);
+					}
+					else{
+						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST BUT NEEDS MORE (" << holder->getNUM() - 1<< ") TIMES"<< std::endl;
 						for(finder = processes.begin(); finder != processes.end(); finder++){
 							if(finder->getPROC() == holder->getPROC()){
 								finder->replaceCPU();
@@ -224,7 +300,7 @@ int main(int argc, char* argv[]){
 	}
 	
 	std::vector<Process> temp = processes;	//temp is a copy of processes, idk if this actually matters, but whatever
-	FCFS(temp);								//goes through first come first serve
+	ShortestRemainingTime(temp);								//goes through first come first serve
 
 	
 	
