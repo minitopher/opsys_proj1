@@ -66,7 +66,7 @@ void FCFS(std::vector<Process> processes){
 				
 				if(holder->getCPU() == 0){					//checks to see that the current holder is 0, goes through the process of deleting it
 				
-					if(holder->getNUM() == 1){				//if the number of processes is 1 continue
+					if(holder->getNUM() == 1){				//if the number of processes is 1 continue on
 						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST" << std::endl;
 						
 						for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
@@ -95,6 +95,70 @@ void FCFS(std::vector<Process> processes){
 		
 		i--;
 	}
+}
+
+void RoundRobin(std::vector<Process> processes){
+	std::vector<Process> readyQueue;
+	int t_slice = 70;
+	int i;
+	while (i > 0){
+		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){		//Same as FCFS
+			if(it->getINIT() == 0){																		//Adds the process when the join time matches
+				bool found = false;
+				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
+					if(it->getPROC() == check->getPROC()){
+						found = true;
+					}
+				}
+				if(found == false){
+					readyQueue.push_back(*it);
+					std::cout << it->getPROC() << " ADDED TO READY QUEUE" << std::endl;
+				}
+			}
+			else{
+				it->subINIT();
+			}
+		}
+		std::vector<Process>::iterator holder = readyQueue.begin();		
+		std::vector<Process>::iterator finder;
+		int t_slice_left = t_slice;
+
+		
+		if (t_slice_left != 0){							//While the timeslice is not 0, subtract 1 from the timeslice
+			holder->subCPU();							//and from the cpu_burst time
+			t_slice_left -= 1;
+
+		}else if (holder->getCPU() == 0){
+			t_slice_left = t_slice;
+			if(holder->getNUM() == 1){				//if the number of processes is 1 continue on
+				std::cout << holder->getPROC() << " WENT THROUGH CPU BURST" << std::endl;
+				
+				for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
+					if(finder->getPROC() == holder->getPROC()){								//if those are the same, erase 
+						processes.erase(finder);
+						break;
+					}
+					std::cout<< "ERASED" << std::endl;
+				}
+				readyQueue.erase(holder);
+			}
+		}else if (t_slice_left == 0){
+			t_slice_left = t_slice;
+			if (readyQueue.size() == 1){			//this is the last process, stay on the same iterator
+				
+			}else{									//otherwise, move on to the next iterator cause this one is spent
+				holder++;
+				if (holder == readyQueue.end()){
+					holder = readyQueue.begin();
+				}			
+			}
+		}
+		
+		i--;		
+	}
+	
+
+	
 }
 
 int main(int argc, char* argv[]){
