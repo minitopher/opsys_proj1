@@ -43,6 +43,12 @@ class Process{
 		void replaceINIT(){
 			INIT_ARR = INIT_REPLACE;
 		}
+		bool hasARRIVED(){
+			return ARR;
+		}
+		void setARRIVED(){
+			ARR = true;
+		}
 		
 	private : 
 		char PROC_ID;
@@ -52,4 +58,5 @@ class Process{
 		int IO_TIME;
 		int CPU_REPLACE;
 		int INIT_REPLACE;
+		bool ARR;
 };
