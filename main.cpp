@@ -254,8 +254,15 @@ void ShortestRemainingTime(std::vector<Process> processes){
 void RoundRobin(std::vector<Process> processes){
 	std::vector<Process> readyQueue;
 	int t_slice = 70;
-	int i;
+	int i = totaltime(processes);
+	int tt = 0;
+	int t_slice_left = t_slice;
+	
+	std::vector<Process>::iterator finder;
+	
+	int j = 0;
 	while (i > 0){
+
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){		//Same as FCFS
 			if(it->getINIT() == 0){																		//Adds the process when the join time matches
 				bool found = false;
@@ -267,53 +274,63 @@ void RoundRobin(std::vector<Process> processes){
 				if(found == false){
 					readyQueue.push_back(*it);
 					std::cout << it->getPROC() << " ADDED TO READY QUEUE" << std::endl;
+					tt+=4;
 				}
 			}
 			else{
 				it->subINIT();
 			}
 		}
-		std::vector<Process>::iterator holder = readyQueue.begin();		
-		std::vector<Process>::iterator finder;
-		int t_slice_left = t_slice;
 
-		
-		if (t_slice_left != 0){							//While the timeslice is not 0, subtract 1 from the timeslice
-			holder->subCPU();							//and from the cpu_burst time
-			t_slice_left -= 1;
-
-		}else if (holder->getCPU() == 0){
+		if (processes[j].getCPU() == 0){
 			t_slice_left = t_slice;
-			if(holder->getNUM() == 1){				//if the number of processes is 1 continue on
-				std::cout << holder->getPROC() << " WENT THROUGH CPU BURST" << std::endl;
-				
-				for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
-					if(finder->getPROC() == holder->getPROC()){								//if those are the same, erase 
+			if (processes[j].getNUM() == 1){
+				for (finder = processes.begin(); finder != processes.end(); finder++){
+					if (finder->getPROC() == processes[j].getPROC()){
 						processes.erase(finder);
 						break;
 					}
-					std::cout<< "ERASED" << std::endl;
 				}
-				readyQueue.erase(holder);
+				readyQueue.erase(readyQueue.begin() + j);
+			} else {
+				for (finder = processes.begin(); finder != processes.end(); finder++){
+					if(finder->getPROC() == processes[j].getPROC()){
+						finder->replaceCPU();
+						finder->subNUM();
+						finder->replaceINIT();
+						if (j + 1 == readyQueue.size()){
+							j = 0;
+						}else{
+							j++;
+						}
+						printf("Re-adding to the queue\n");
+						tt+=4;
+					}
+				}
 			}
 		}else if (t_slice_left == 0){
 			t_slice_left = t_slice;
-			if (readyQueue.size() == 1){			//this is the last process, stay on the same iterator
-				
-			}else{									//otherwise, move on to the next iterator cause this one is spent
-				holder++;
-				if (holder == readyQueue.end()){
-					holder = readyQueue.begin();
-				}			
+			if (readyQueue.size() == 1){
+
+			}else{
+				printf("Switching to next object in queue\n");
+				if (j + 1 == readyQueue.size()){
+					j = 0;
+				}else{
+					j++;
+				}
+				tt+=4;
 			}
+		}else if (t_slice_left > 0){
+			printf("%d: 1ms of %c, with CPU of %d left and Timeslice of %d left\n", tt , processes[j].getPROC(), processes[j].getCPU(),t_slice_left);
+			processes[j].subCPU();
+			tt++;
+			t_slice_left--;
 		}
 		
 		i--;		
 	}
 	
-
-	
-}
 
 int main(int argc, char* argv[]){
 	//argv[1] should be the input file, and (i think?) argv[2] should be output file
