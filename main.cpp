@@ -237,8 +237,11 @@ void ShortestRemainingTime(std::vector<Process> processes){
 	//Shortest Remaining Time
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	std::vector<Process> readyQueue;
-	int i = totaltime(processes);
-	while (i > 0){
+	bool end = false;
+	int t_cs = 0;
+	char timeHolder;
+	std::cout <<"time " << t_cs << "ms: Simulator started for SRT [Q <empty>]" << std::endl;
+	while (end == false){
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
 			if(it->getINIT() == 0){
 				bool found = false;
@@ -250,16 +253,43 @@ void ShortestRemainingTime(std::vector<Process> processes){
 				if(found == false){
 					if( readyQueue.begin() == readyQueue.end()){		//if theres nothing in the queue yet just add it to the beginning
 						readyQueue.push_back(*it);
+						if(it->hasARRIVED()){
+							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
+							std::vector<Process>::iterator write = readyQueue.begin();
+							if(write == readyQueue.end()){
+								std::cout << " <empty>";
+							}
+							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+								if(timeHolder != write->getPROC()){
+									std::cout << " " << write->getPROC();
+								}
+							}
+							std::cout<< "]" << std::endl;
+						}
+						else{
+							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
+							std::vector<Process>::iterator write = readyQueue.begin();
+							if(write == readyQueue.end()){
+								std::cout << " <empty>";
+							}
+							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+								if(timeHolder != write->getPROC()){
+									std::cout << " " << write->getPROC();
+								}
+							}
+							std::cout<< "]" << std::endl;
+							it->setARRIVED();
+						}
 					}
 					else{
 						int location = getSRT(readyQueue, it ->getCPU());		//find where the new process belongs in the queue
+						std::vector<Process>::iterator iter = readyQueue.begin();
 						if (location == 0){										//If it ends up being the shortest amount of time, just add it to the front
-							std::vector<Process>::iterator iter = readyQueue.begin();
 							readyQueue.insert(iter, *it);
 						}
 						else{
 							int count = 1;											//Else find that location and insert dat boi
-							for(std::vector<Process>::iterator iter = readyQueue.begin(); iter != readyQueue.end(); iter++){
+							for(iter = readyQueue.begin(); iter != readyQueue.end(); iter++){
 								if(location == count){							
 									iter++;
 									readyQueue.insert(iter, *it);
@@ -268,8 +298,36 @@ void ShortestRemainingTime(std::vector<Process> processes){
 								count++;
 							}
 						}
+						if(it->hasARRIVED()){
+							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O and will preempt " << iter->getPROC() << " [Q";
+							std::vector<Process>::iterator write = readyQueue.begin();
+							if(write == readyQueue.end()){
+								std::cout << " <empty>";
+							}
+							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+								if(timeHolder != write->getPROC()){
+									std::cout << " " << write->getPROC();
+								}
+							}
+							std::cout<< "]" << std::endl;
+						}
+						else{
+							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
+							it--;
+							std::cout << iter->getPROC() << " [Q";
+							std::vector<Process>::iterator write = readyQueue.begin();
+							if(write == readyQueue.end()){
+								std::cout << " <empty>";
+							}
+							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+								if(timeHolder != write->getPROC()){
+									std::cout << " " << write->getPROC();
+								}
+							}
+							std::cout<< "]" << std::endl;
+							it->setARRIVED();
+						}
 					}
-					std::cout << it->getPROC() << " ADDED TO READY QUEUE" << std::endl;
 				}
 			}
 			else{
@@ -277,42 +335,132 @@ void ShortestRemainingTime(std::vector<Process> processes){
 			}
 		}
 		//CPU BURST
-		std::vector<Process>::iterator holder = readyQueue.begin();		
+		std::vector<Process>::iterator holder = readyQueue.begin();
+		if(holder != readyQueue.end()){
+			if(timeHolder == NULL){
+				timeHolder = holder->getPROC();
+				t_cs += 4;
+				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
+				std::vector<Process>::iterator write = readyQueue.begin();
+				if(write == readyQueue.end()){
+					std::cout << " <empty>";
+				}
+				for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+					if(timeHolder != write->getPROC()){
+						std::cout << " " << write->getPROC();
+					}
+					else if(readyQueue.size() == 1){
+						std::cout << " <empty>";
+					}
+				}
+				std::cout<< "]" << std::endl;
+			}
+			else if(timeHolder != holder->getPROC()){
+				timeHolder = holder->getPROC();
+				t_cs += 4;
+				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
+				std::vector<Process>::iterator write = readyQueue.begin();
+				if(write == readyQueue.end()){
+					std::cout << " <empty>";
+				}
+				for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+					if(timeHolder != write->getPROC()){
+						std::cout << " " << write->getPROC();
+					}
+					else if(readyQueue.size() == 1){
+						std::cout << " <empty>";
+					}
+				}
+				std::cout<< "]" << std::endl;
+			}
+		}
 		std::vector<Process>::iterator finder;
-		
 		if(holder != readyQueue.end()){						//while holder doesnt reach the end of the queue
 
 			if(holder->getCPU() != 0){						//checks the current holder iterator and sees the remaining CPU time, continues if not 0
-				holder->subCPU();							//subtracts 1 from the CPU burst time remaining
-				
-				if(holder->getCPU() == 0){					//checks to see that the current holder is 0, goes through the process of deleting it
-				
-					if(holder->getNUM() == 1){				//if the number of processes is 1 continue on						
-						for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
-							if(finder->getPROC() == holder->getPROC()){
-								std::cout<< finder->getPROC() << " HAS FINISHED BEING PROCESSED" << std::endl;
-								processes.erase(finder);  //if those are the same, erase 
-								break;
+				holder->subCPU();	
+			}				//subtracts 1 from the CPU burst time remaining
+			else if(holder->getCPU() == 0){				//checks to see that the current holder is 0, goes through the process of deleting it
+				if(holder->getNUM() == 1){				//if the number of processes is 1 continue on						
+					for(finder = processes.begin(); finder != processes.end(); finder++){		//iterates through processes
+						if(finder->getPROC() == holder->getPROC()){
+							std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " terminated [Q";
+							std::vector<Process>::iterator write = readyQueue.begin();
+							if(write == readyQueue.end()){
+								std::cout << " <empty>";
 							}
+							for(write = readyQueue.begin(); write != readyQueue.end(); write++){									
+								if(timeHolder != write->getPROC()){
+									std::cout << " " << write->getPROC();
+								}
+								else if(readyQueue.size() == 1){
+									std::cout << " <empty>";
+								}
+							}
+							std::cout<< "]" << std::endl;
+							t_cs += 4;							
+							processes.erase(finder);  //if those are the same, erase 
+							break;
 						}
-						readyQueue.erase(holder);
+					}
+					readyQueue.erase(holder);
+				}
+				else{
+					std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " completed a CPU burst; " << holder->getNUM() - 1;
+					if(holder->getNUM() - 1 == 1){
+						std::cout << " burst to go [Q";
 					}
 					else{
-						std::cout << holder->getPROC() << " WENT THROUGH CPU BURST BUT NEEDS MORE (" << holder->getNUM() - 1<< ") TIMES"<< std::endl;
-						for(finder = processes.begin(); finder != processes.end(); finder++){
-							if(finder->getPROC() == holder->getPROC()){
-								finder->replaceCPU();
-								finder->subNUM();
-								finder->replaceINIT();
-							}
-						}
-						readyQueue.erase(holder);
+						std::cout << " bursts to go [Q";
 					}
+					std::vector<Process>::iterator write = readyQueue.begin();
+					if(write == readyQueue.end()){
+						std::cout << " <empty>";
+					}
+					for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+						if(timeHolder != write->getPROC()){
+							std::cout << " " << write->getPROC();					
+						}
+						else if(readyQueue.size() == 1){
+							std::cout << " <empty>";
+						}
+					}
+					std::cout<< "]" << std::endl;
+					int temp;
+					for(finder = processes.begin(); finder != processes.end(); finder++){
+						if(finder->getPROC() == holder->getPROC()){
+							finder->replaceCPU();
+							finder->subNUM();
+							finder->replaceINIT();
+							temp = finder->getIO() + t_cs;
+						}
+					}
+					write = readyQueue.begin();
+					std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " switching out of CPU; will block on I/O until time " << temp + 4 << "ms [Q";
+					if(write == readyQueue.end()){
+						std::cout << " <empty>";
+					}
+					for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+						if(timeHolder != write->getPROC()){
+							std::cout << " " << write->getPROC();
+						}
+						else if(readyQueue.size() == 1){
+							std::cout << " <empty>";
+						}
+					}
+					std::cout<< "]" << std::endl;
+					t_cs += 4;
+					timeHolder = NULL;
+					readyQueue.erase(holder);
 				}
 			}
-		}
 		
-		i--;
+		}
+		t_cs ++;
+		if(processes.size() == 0){
+			std::cout <<"time " << t_cs << "ms: Simulator ended for SRT" << std::endl;
+			end = true;
+		}
 	}
 }
 
@@ -626,10 +774,13 @@ int main(int argc, char* argv[]){
 		}
 	}
 	
-	std::vector<Process> temp = processes;	//temp is a copy of processes, idk if this actually matters, but whatever
-	FCFS(temp);								//goes through first come first serve
-
-	//RoundRobin(temp);
+	std::vector<Process> fcfs = processes;	//temp is a copy of processes, idk if this actually matters, but whatever
+	std::vector<Process> SRT = processes;
+	std::vector<Process> RR = processes;
+	FCFS(fcfs);	//goes through first come first serve
+	std::cout<<std::endl;
+	ShortestRemainingTime(SRT);
+	//RoundRobin(RR);
 	
 	
 	//something something output file idk
