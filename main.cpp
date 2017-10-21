@@ -8,6 +8,9 @@
 
 #include "process.h"
 
+//Project members: leec21
+
+
 int getSRT(std::vector<Process> queue, int newTime){
 	int location = 0;
 	for(std::vector<Process>::iterator it = queue.begin(); it != queue.end(); it++){
@@ -36,7 +39,7 @@ std::string queue(std::vector<Process> processes, char current){
 		temp.append(" <empty>");
 	}
 	else{
-		for (int i = 0; i < processes.size(); i++){
+		for (unsigned int i = 0; i < processes.size(); i++){
 			if (processes[i].getPROC() == current){
 				continue;
 			}
@@ -107,7 +110,7 @@ void FCFS(std::vector<Process> &processes){
 		//CPU BURST
 		std::vector<Process>::iterator holder = readyQueue.begin();
 		if(holder != readyQueue.end()){
-			if(timeHolder == NULL){
+			if(timeHolder == '^'){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
@@ -220,7 +223,7 @@ void FCFS(std::vector<Process> &processes){
 					}
 					std::cout<< "]" << std::endl;
 					t_cs += 4;
-					timeHolder = NULL;
+					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
 			}
@@ -350,7 +353,7 @@ void ShortestRemainingTime(std::vector<Process> processes){
 		
 		holder = readyQueue.begin();
 		if(holder != readyQueue.end()){
-			if(timeHolder == NULL){
+			if(timeHolder == '^'){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU ";
@@ -473,7 +476,7 @@ void ShortestRemainingTime(std::vector<Process> processes){
 					}
 					std::cout<< "]" << std::endl;
 					t_cs += 4;
-					timeHolder = NULL;
+					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
 			}
@@ -488,38 +491,77 @@ void ShortestRemainingTime(std::vector<Process> processes){
 }
 
 void RoundRobin(std::vector<Process> processes){
-	int temp = 1;
 	
+	int time = 0;
 	std::vector<Process> readyQueue;
 	int t_slice = 70;
-	int i = totaltime(processes);
-	int total_time = i;
-
-	int add_remove_time = 0;
-	bool done_a_r = true;
-	
-	int t_slice_left = t_slice;
-
-	int placeholder;
-
-	char curr_process = NULL;
-
 	std::vector<char> already_added;
-	
+	char current = '^';
+
 	std::vector<Process>::iterator finder;
 	bool previously_in_queue;
 
-	std::cout << "time 0ms: Simulator started for RR [Q <empty>]" << std::endl;
-	
-	int j = 0;
-	while (i > 0){
+	int add_remove_time = 0;
+	bool done_a_r = true;
 
+	bool terminate = false;
+
+	std::cout << "time 0ms: Simulator started for RR [Q <empty>]" << std::endl;
+	while (time >= 0){
+		//Check to see if processes is empty, if so, break the loop and return
+		
 		if (processes.size() == 0){
 			break;
 		}
+		
+		if (readyQueue.size() == 0){
+			current = '^';
+		}
+		//Check if the current process is done and needs to do another burst, if there's another process, start on it.
+		
+		if (readyQueue.size() != 0){
+			if (readyQueue[0].getCPU() <= 0){
+				t_slice = 70;
+				if (readyQueue[0].getNUM() == 1){
+				//remove from the readyQueue, and remove the process for good from processes
+					for (finder = processes.begin(); finder != processes.end(); finder++){
+						if (finder->getPROC() == readyQueue[0].getPROC()){
+							processes.erase(finder);
+							break;
+						}	
+					}
+					readyQueue.erase(readyQueue.begin());
+					std::cout << "time " << time << "ms: Process " << finder->getPROC() << " terminated " << queue(readyQueue, current) << std::endl;
+					
+				}
+				else if(readyQueue[0].getNUM() > 1){
+					//process still needs to go through more bursts, removes it from queue anyways
+					for (finder = processes.begin(); finder != processes.end(); finder++){
+						if(finder->getPROC() == readyQueue[0].getPROC()){
+							finder->subNUM();
+							finder->new_INIT(time+4);
+							break;
+						}
+					}	
+					readyQueue.erase(readyQueue.begin());
 
+					std::cout << "time " << time << "ms: Process " << finder->getPROC() << " completed a CPU burst; " << finder->getNUM() << (finder->getNUM()  == 1 ? " burst" : " bursts") << " to go " << queue(readyQueue, current) << std::endl;
+
+						std::cout << "time " << time << "ms: Process " << finder->getPROC() << " switching out of CPU; will block on I/O until time " <<  finder->getINIT() << "ms " << queue(readyQueue, current) << std::endl;
+					
+				}
+				
+				if (readyQueue.size() != 0){
+					current = readyQueue.begin()->getPROC();
+				}
+				terminate = true;
+			}
+
+		}
+
+		//Add process to queue if its init_time = to the current time;
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){		//Same as FCFS
-			if(it->getINIT() <= 0){																		//Adds the process when the join time matches
+			if(it->getINIT() == time){															//Adds the process when the join time matches
 				bool found = false;
 				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){	
 					if(it->getPROC() == check->getPROC()){
@@ -528,217 +570,99 @@ void RoundRobin(std::vector<Process> processes){
 				}
 				if(found == false){
 					readyQueue.push_back(*it);
+					//std::cout << it->getCPU() << std::endl;
 					previously_in_queue = false;
 					for (std::vector<char>::iterator it2 = already_added.begin(); it2 != already_added.end(); it2++){
 						if (*it2 == it->getPROC()){
-							std::cout << "time " << total_time - i << "ms: Process " << it->getPROC() << " completed I/O; added to ready queue " << queue(readyQueue, curr_process) << std::endl;
+							std::cout << "time " << time << "ms: Process " << it->getPROC() << " completed I/O; added to ready queue " << queue(readyQueue, current) << std::endl;
 							previously_in_queue = true;
 						}
 					}
 
 					if (previously_in_queue == false){
-						std::cout << "time " << total_time - i << "ms: Process " << it->getPROC() << " arrived and added to ready queue " << queue(readyQueue, curr_process) << std::endl;
+						std::cout << "time " << time << "ms: Process " << it->getPROC() << " arrived and added to ready queue " << queue(readyQueue, current) << std::endl;
 						already_added.push_back(it->getPROC());
 					}
 				}
+				
+				if (readyQueue.size() == 1){
+					t_slice = 70;
+				}
+			
 			}
-		
-			it->subINIT();
+		}
+
+		//if a process starts on the ready queue with at t_slice of 70, get started
+
+
+		if (terminate){
+			done_a_r = false;
+			if (add_remove_time == 4 && done_a_r == false){
+				done_a_r = true;
+				add_remove_time = 0;
+			}else if(add_remove_time < 4 && done_a_r == false){
+				add_remove_time++;
+				time++;
+				continue;
+			}
+			terminate = false;
 			
 		}
 
-		if(readyQueue.size() != 0){
-			if (readyQueue[j].getCPU() == 0){															//this checks if CPU burst = 0
-				placeholder = j;
-				t_slice_left = t_slice;
-				if (readyQueue[j].getNUM() <= 1){
-					for (finder = processes.begin(); finder != processes.end(); finder++){
-						if (finder->getPROC() == readyQueue[j].getPROC() && done_a_r == true){
-							processes.erase(finder);
-							i-=4;
-							break;
-						}		
-					}
-				//std::cout << done_a_r << std::endl;
-					if (done_a_r){
-						std::cout << "time " << total_time - i << "ms: Process " << finder->getPROC() << " terminated " << queue(readyQueue, curr_process) << std::endl;
-					}
-				}else{
-					for (finder = processes.begin(); finder != processes.end(); finder++){
-						if(finder->getPROC() == readyQueue[j].getPROC() && done_a_r == true){
-							finder->replaceCPU();
-							finder->subNUM();
-							finder->replaceINIT();
-							finder->subINIT();
-							break;
-						}
-					}
+		//Check to see if t_slice is 0, means that the timeslice is over and next in queue should be given a timeslice of 70.
+		if (t_slice == 0){
+			if (readyQueue.size() > 1 ){
+				t_slice = 70;
+				std::cout << "time " << time << "ms: Time slice expired; process " << readyQueue[0].getPROC() << " preempted with " << readyQueue[0].getCPU() << "ms to go " << queue(readyQueue, current) << std::endl;
 
-					if (done_a_r){
-						std::cout << "time " << total_time - i << "ms: Process " << readyQueue[j].getPROC() << " completed a CPU burst; " << finder->getNUM() << " bursts to go " << queue(readyQueue, curr_process) << std::endl;
+			}else if (readyQueue.size() == 1){
+				t_slice = 70;
+				std:: cout << "time " << time << "ms: Time slice expired; no preemption because ready queue is empty " << queue(readyQueue, current) << std::endl;
+			}
+			
+		}
 
-						std::cout << "time " << total_time - i << "ms: Process " << readyQueue[j].getPROC() << " switching out of CPU; will block on I/O until time " << (total_time - i) + finder->getIO() << "ms " << queue(readyQueue, curr_process) << std::endl;
-
-					}
-				}
-
+		if (t_slice == 70 && readyQueue.size() != 0){
+			current = readyQueue[0].getPROC();
+			
 				done_a_r = false;
 				if (add_remove_time == 4 && done_a_r == false){
 					done_a_r = true;
 					add_remove_time = 0;
 				}else if(add_remove_time < 4 && done_a_r == false){
 					add_remove_time++;
-					i--;
+					time++;
 					continue;
 				}
 			
-				t_slice_left = t_slice;
-				if ( j+1 == readyQueue.size()){
-					j = 0;
-				}
-				readyQueue.erase(readyQueue.begin() + placeholder);
-			
-			}
-		}
-
-		if (t_slice_left == 70 && readyQueue.size() > 0){
-			done_a_r = false;
-			if (add_remove_time == 4 && done_a_r == false){
-				done_a_r = true;
-				add_remove_time = 0;
-			}else if(add_remove_time < 4 && done_a_r == false){
-				add_remove_time++;
-				i--;
-				continue;
-			}
-			
-		if (readyQueue.size() == 0){
-			curr_process = NULL;
-		}else{
-			curr_process = readyQueue[j].getPROC();
-		}	
-			std::cout << "time " << total_time - i << "ms: Process " << readyQueue[j].getPROC() << " started using the CPU " << queue(readyQueue, curr_process) << std::endl;
-							//this means something happened, and timeslice is now 70
+			std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU " << queue(readyQueue, current) << std::endl;
 		}
 		
-		if (t_slice_left == 0){
-
-			if (done_a_r && curr_process != NULL){
-				std::cout << "time " << total_time - i << "ms: Time slice expired; process " << readyQueue[j].getPROC() << " preempted with " << readyQueue[j].getCPU() << "ms to go " << queue(readyQueue, curr_process) << std::endl;
-			}else if (done_a_r && readyQueue.size() == 0){
-				std::cout << "time " << total_time - i << "ms: Time slice expired; no preemption because ready queue is empty " << queue(readyQueue, curr_process) << std::endl;
-				
-			}
-
-			done_a_r = false;
-			if (add_remove_time == 4 && done_a_r == false){
-				done_a_r = true;
-				add_remove_time = 0;
-			}else if(add_remove_time < 4 && done_a_r == false){
-				add_remove_time++;
-				i--;
-				continue;
-			}
-			
-			t_slice_left = t_slice;
-			if (readyQueue.size() == 1){
-	
-			}else{
-				if (j+1 == readyQueue.size()){
-					j = 0;
-				}else{
-					j++;
-				}
-			}
-		}else if (t_slice_left > 0 && readyQueue.size() != 0){
-			readyQueue[j].subCPU();
-			t_slice_left--;
+		//If everything else checks out, decrease 1 from timeslice and add 1 to time		
+		if (readyQueue.size() != 0){
+			t_slice--;
+			readyQueue[0].subCPU();
+			time++;
 		}else{
-			t_slice_left--;
+			t_slice--;
+			time++;
 		}
 
 
-	
-
-		/*for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){		//Same as FCFS
-			if(it->getINIT() == 0){																		//Adds the process when the join time matches
-				bool found = false;
-				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
-					if(it->getPROC() == check->getPROC()){
-						found = true;
-					}
-				}
-				if(found == false){
-					readyQueue.push_back(*it);
-					std::cout << "time " << total_time - i << "ms: Process " << it->getPROC() << " arrived and added to ready queue " << queue(readyQueue, curr_process) << std::endl;
-				}
-			}
-			else{
-				it->subINIT();
-			}
-		}
-
-		if (t_slice_left == 70){
-			curr_process = readQueue[j].getPROC();
-			std::cout << "time " << total_time - i << "ms: Process " << readyQueue[j].getPROC() << " started using the CPU " << queue(readyQueue, curr_process) << std::endl;
-		}
-
-		if (readyQueue[j].getCPU() == 0){
-			t_slice_left = t_slice;
-			if (readyQueue[j].getNUM() == 1){
-				for (finder = processes.begin(); finder != processes.end(); finder++){
-					if (finder->getPROC() == processes[j].getPROC()){
-						processes.erase(finder);
-						break;
-					}
-				}
-				readyQueue.erase(readyQueue.begin() + j);
-			} else {
-				for (finder = processes.begin(); finder != processes.end(); finder++){
-					if(finder->getPROC() == processes[j].getPROC()){
-						finder->replaceCPU();
-						finder->subNUM();
-						finder->replaceINIT();
-						
-						placeholder = j;
-						if (j - 1 == readyQueue.size()){
-							j = 0;
-						}else{
-
-						}
-					}
-
-				readyQueue.erase(readyQueue.begin() + placeholder);
-				}
-			}
-		}else if (t_slice_left == 0){
-			t_slice_left = t_slice;
-			if (readyQueue.size() == 1){
-
-			}else{
-				printf("Switching to next object in queue\n");
-				if (j + 1 == readyQueue.size()){
-					j = 0;
-				}else{
-					j++;
-				}
-			}
-		}else if (t_slice_left > 0){
-			processes[j].subCPU();
-			t_slice_left--;
-		}
 		
-		*/
-		i--;		
+		
 	}
-	
+
+	std::cout << "time " << time +3 << "ms: Simulator ended for RR" << std::endl;
 }
+
 
 
 int main(int argc, char* argv[]){
 	//argv[1] should be the input file, and (i think?) argv[2] should be output file
 	
 	std::ifstream input( argv[1] );
+	std::ofstream output( argv[2] );
 	std::vector<Process> processes;
 	for (std::string line; getline (input, line); ){
 		if (line[0] == '#'){
@@ -754,7 +678,7 @@ int main(int argc, char* argv[]){
 			std::vector<char> arr;
 			
 			PROC = line[0];
-			int i = 2;
+			unsigned int i = 2;
 
 			while (line[i] != '|'){
 				arr.push_back(line[i]);
@@ -803,7 +727,10 @@ int main(int argc, char* argv[]){
 	FCFS(fcfs);	//goes through first come first serve
 	std::cout<<std::endl;
 	ShortestRemainingTime(SRT);
-	//RoundRobin(RR);
+	std::cout<<std::endl;
+	RoundRobin(RR);
+
+	
 	
 	
 	//something something output file idk

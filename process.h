@@ -55,6 +55,20 @@ class Process{
 		void setPre(bool which){
 			pre = which;
 		}
+
+		void new_INIT(int time){
+			INIT_ARR = IO_TIME + time;
+		}
+
+		void sub_intCPU(int i){
+			if (CPU_BURST-i <= 0){
+				CPU_BURST = 0;
+			}
+			else{
+				CPU_BURST = CPU_BURST - i;
+			}
+		}
+		
 		
 	private : 
 		char PROC_ID;
