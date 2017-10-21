@@ -49,6 +49,12 @@ class Process{
 		void setARRIVED(){
 			ARR = true;
 		}
+		bool isPreempted(){
+			return pre;
+		}
+		void setPre(bool which){
+			pre = which;
+		}
 		
 	private : 
 		char PROC_ID;
@@ -59,4 +65,5 @@ class Process{
 		int CPU_REPLACE;
 		int INIT_REPLACE;
 		bool ARR;
+		bool pre;
 };
