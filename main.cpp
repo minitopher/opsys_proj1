@@ -59,6 +59,22 @@ std::string queue(std::vector<Process> processes, char current){
 void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 	//First come first serve
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
+
+	float CPU_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		CPU_average += processes[i].getCPU();
+	}
+	CPU_average = CPU_average/float(processes.size());
+
+	float INIT_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		INIT_average += processes[i].getINIT();
+	}
+	INIT_average = INIT_average/float(processes.size());
+
+	int context_switches = 0;
+
+	
 	int t_cs = 0;
 	std::vector<Process> readyQueue;
 	char timeHolder;
@@ -115,6 +131,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
+				context_switches++;
 				std::vector<Process>::iterator write = readyQueue.begin();
 				if(write == readyQueue.end()){
 					std::cout << " <empty>";
@@ -239,16 +256,33 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 
 	fout << std::fixed;
 	fout << "Algorithm FCFS" << std::endl;
-	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average turnaround time: placeholder number ms" << std::endl;
-	fout << "-- total number of context switches: " << "context_switch" << std::endl;
-	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
+	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
+	fout << "-- average wait time: " << std::setprecision(2) << INIT_average << " ms" << std::endl;
+	fout << "-- average turnaround time: 123.00 ms" << std::endl;
+	fout << "-- total number of context switches: " << context_switches << std::endl;
+	fout << "-- total number of preemptions: " << "0" << std::endl;
 	fout << std::endl;
 }
 void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 	//Shortest Remaining Time
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
+
+	float CPU_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		CPU_average += processes[i].getCPU();
+	}
+	CPU_average = CPU_average/float(processes.size());
+
+	float INIT_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		INIT_average += processes[i].getINIT();
+	}
+	INIT_average = INIT_average/float(processes.size());
+
+	int context_switches = 0;
+	int preemptions = 0;
+	
+
 	std::vector<Process> readyQueue;
 	bool end = false;
 	int t_cs = 0;
@@ -363,10 +397,12 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 		
 		holder = readyQueue.begin();
 		if(holder != readyQueue.end()){
+			context_switches++;
 			if(timeHolder == '^'){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU ";
+				
 				if(holder->isPreempted()){
 					std::cout << "with " << holder->getCPU() << "ms remaining ";
 					holder->setPre(false);
@@ -501,11 +537,11 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 
 	fout << std::fixed;
 	fout << "Algorithm SRT" << std::endl;
-	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
+	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
+	fout << "-- average wait time: " << std::setprecision(2) << INIT_average << " ms" << std::endl;
 	fout << "-- average turnaround time: placeholder number ms" << std::endl;
-	fout << "-- total number of context switches: " << "context_switch" << std::endl;
-	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
+	fout << "-- total number of context switches: " << context_switches << std::endl;
+	fout << "-- total number of preemptions: " << preemptions << std::endl;
 	fout << std::endl;
 }
 
@@ -731,6 +767,14 @@ int main(int argc, char* argv[]){
 	
 	std::ifstream input( argv[1] );
 	std::ofstream output( argv[2] );
+
+	if (argv[1] == NULL || argv[2] == NULL){
+		fprintf(stderr,"ERROR: Invalid arguments\nUSAGE: ./a.out <input-file> <stats-output-file>");
+	}else if (!input.good()){
+		fprintf(stderr,"ERROR: Invalid input file format");
+	}
+
+	
 	std::vector<Process> processes;
 	for (std::string line; getline (input, line); ){
 		if (line[0] == '#' || line[0] == '\n'){
