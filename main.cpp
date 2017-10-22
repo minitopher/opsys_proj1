@@ -57,11 +57,25 @@ std::string queue(std::vector<Process> processes, char current){
 
 
 void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
+	
+	double CPU_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		CPU_average += double(processes[i].getCPU());
+	}
+	CPU_average = CPU_average/double(processes.size());
+
+	double init_average = 0;
+	std::vector<double> waits;
+	std::vector<double> turnarounds;
+
+	int context_switch = 0;
+	double turn_avg = 0;
 	//First come first serve
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	int t_cs = 0;
 	std::vector<Process> readyQueue;
 	char timeHolder;
+	int counter = 0;
 	std::cout <<"time " << t_cs << "ms: Simulator started for FCFS [Q <empty>]" << std::endl;
 	bool end = false;
 	while (end == false){
@@ -71,6 +85,9 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
 					if(it->getPROC() == check->getPROC()){
 						found = true;
+						if(it->getPROC() != timeHolder){
+							it->increaseWait();
+						}
 					}
 				}
 				if(found == false){
@@ -89,7 +106,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 						std::cout<< "]" << std::endl;
 					}
 					else{
-						std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
+						std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
 						std::vector<Process>::iterator write = readyQueue.begin();
 						if(write == readyQueue.end()){
 							std::cout << " <empty>";
@@ -114,6 +131,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 			if(timeHolder == '^'){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
+				context_switch++;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
 				std::vector<Process>::iterator write = readyQueue.begin();
 				if(write == readyQueue.end()){
@@ -132,6 +150,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 			else if(timeHolder != holder->getPROC()){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
+				context_switch++;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU [Q";
 				std::vector<Process>::iterator write = readyQueue.begin();
 				if(write == readyQueue.end()){
@@ -150,7 +169,6 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 		}
 		std::vector<Process>::iterator finder;
 		if(holder != readyQueue.end()){						//while holder doesnt reach the end of the queue
-
 			if(holder->getCPU() != 0){						//checks the current holder iterator and sees the remaining CPU time, continues if not 0
 				holder->subCPU();	
 			}				//subtracts 1 from the CPU burst time remaining
@@ -172,7 +190,9 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 								}
 							}
 							std::cout<< "]" << std::endl;
-							t_cs += 4;							
+							t_cs += 3;	
+							waits.push_back(finder->getWait());
+							turnarounds.push_back(finder->getWait() + finder->getCPUReplace() + 8);
 							processes.erase(finder);  //if those are the same, erase 
 							break;
 						}
@@ -223,7 +243,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 						}
 					}
 					std::cout<< "]" << std::endl;
-					t_cs += 4;
+					t_cs += 3;
 					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
@@ -231,22 +251,44 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 		
 		}
 		t_cs ++;
+		counter += 1;	
 		if(processes.size() == 0){
 			std::cout <<"time " << t_cs << "ms: Simulator ended for FCFS" << std::endl;
 			end = true;
 		}
 	}
+	
+	for(unsigned int i = 0; i < waits.size(); i++){
+		init_average += waits[i];
+	}
+	init_average /= waits.size();
+	
+	for(unsigned int i = 0; i < turnarounds.size(); i++){
+		turn_avg += turnarounds[i];
+	}
+	turn_avg /= turnarounds.size();
 
 	fout << std::fixed;
 	fout << "Algorithm FCFS" << std::endl;
-	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average turnaround time: placeholder number ms" << std::endl;
-	fout << "-- total number of context switches: " << "context_switch" << std::endl;
-	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
-	fout << std::endl;
+	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
+	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
+	fout << "-- average turnaround time: " << std::setprecision(2) << turn_avg <<" ms" << std::endl;
+	fout << "-- total number of context switches: " << context_switch << std::endl;
+	fout << "-- total number of preemptions: " << 0 << std::endl;
 }
 void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
+	double CPU_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		CPU_average += double(processes[i].getCPU());
+	}
+	CPU_average = CPU_average/double(processes.size());
+
+	double init_average = 0;
+	std::vector<double> waits;
+	std::vector<double> turnarounds;
+	int context_switch = 0;
+	double turn_avg = 0;
+	int preemptions = 0;
 	//Shortest Remaining Time
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	std::vector<Process> readyQueue;
@@ -254,6 +296,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 	int t_cs = 0;
 	char timeHolder;
 	bool preempted = false;
+	int counter = 0;
 	std::cout <<"time " << t_cs << "ms: Simulator started for SRT [Q <empty>]" << std::endl;
 	while (end == false){
 		for(std::vector<Process>::iterator it = processes.begin(); it != processes.end(); it++){
@@ -262,6 +305,9 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 				for(std::vector<Process>::iterator check = readyQueue.begin(); check != readyQueue.end(); check++){
 					if(it->getPROC() == check->getPROC()){
 						found = true;
+						if(it->getPROC() != timeHolder){
+							it->increaseWait();
+						}
 					}
 				}
 				if(found == false){
@@ -281,7 +327,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 							std::cout<< "]" << std::endl;
 						}
 						else{
-							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
+							std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
 							std::vector<Process>::iterator write = readyQueue.begin();
 							if(write == readyQueue.end()){
 								std::cout << " <empty>";
@@ -310,9 +356,10 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 							}
 							std::cout<< "]" << std::endl;
 							preempted = true;
+							preemptions++;
 						}
 						else{
-							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
+							std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
 							std::cout << timeHolder << " [Q";
 							std::vector<Process>::iterator write = readyQueue.begin();
 							if(readyQueue.size() == 1){
@@ -326,6 +373,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 							std::cout<< "]" << std::endl;
 							it->setARRIVED();
 							preempted = true;
+							preemptions++;
 						}
 						int location = getSRT(readyQueue, it ->getCPU());		//find where the new process belongs in the queue
 						std::vector<Process>::iterator iter = readyQueue.begin();
@@ -366,6 +414,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 			if(timeHolder == '^'){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
+				context_switch++;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU ";
 				if(holder->isPreempted()){
 					std::cout << "with " << holder->getCPU() << "ms remaining ";
@@ -389,6 +438,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 			else if(timeHolder != holder->getPROC()){
 				timeHolder = holder->getPROC();
 				t_cs += 4;
+				context_switch++;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU ";
 				if(holder->isPreempted()){
 					std::cout << "with " << holder->getCPU() << "ms remaining ";
@@ -434,7 +484,9 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 								}
 							}
 							std::cout<< "]" << std::endl;
-							t_cs += 4;							
+							t_cs += 3;
+							waits.push_back(finder->getWait());
+							turnarounds.push_back(finder->getWait() + finder->getCPUReplace() + 8);							
 							processes.erase(finder);  //if those are the same, erase 
 							break;
 						}
@@ -485,7 +537,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 						}
 					}
 					std::cout<< "]" << std::endl;
-					t_cs += 4;
+					t_cs += 3;
 					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
@@ -493,20 +545,30 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 		
 		}
 		t_cs ++;
+		counter += 1;
 		if(processes.size() == 0){
 			std::cout <<"time " << t_cs << "ms: Simulator ended for SRT" << std::endl;
 			end = true;
 		}
 	}
-
+	
+	for(unsigned int i = 0; i < waits.size(); i++){
+		init_average += waits[i];
+	}
+	init_average /= waits.size();
+	
+	for(unsigned int i = 0; i < turnarounds.size(); i++){
+		turn_avg += turnarounds[i];
+	}
+	turn_avg /= turnarounds.size();
+	
 	fout << std::fixed;
 	fout << "Algorithm SRT" << std::endl;
-	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
-	fout << "-- average turnaround time: placeholder number ms" << std::endl;
-	fout << "-- total number of context switches: " << "context_switch" << std::endl;
-	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
-	fout << std::endl;
+	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
+	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
+	fout << "-- average turnaround time: " << std::setprecision(2) << turn_avg << " ms" << std::endl;
+	fout << "-- total number of context switches: " << context_switch << std::endl;
+	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }
 
 void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
@@ -652,7 +714,6 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 		//Check to see if t_slice is 0, means that the timeslice is over and next in queue should be given a timeslice of 70.
 		if (t_slice == 0){
 			if (readyQueue.size() > 1 ){
-				preemptions++;
 				done_a_r = false;
 				if (add_remove_time == 4 && done_a_r == false){
 					done_a_r = true;
@@ -664,6 +725,7 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 				}
 			
 				t_slice = 70;
+				preemptions++;
 				std::cout << "time " << time - 4 << "ms: Time slice expired; process " << readyQueue[0].getPROC() << " preempted with " << readyQueue[0].getCPU() << "ms to go " << queue(readyQueue, current) << std::endl;
 			already_going = false;
 			readyQueue.push_back(*readyQueue.begin());
@@ -692,8 +754,10 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 			
 
 			if (readyQueue[0].getCPU() != readyQueue[0].get_replaceCPU()){
-					std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU with " << readyQueue[0].getCPU() << "ms remaining " << queue(readyQueue, current) << std::endl;
+				context_switch += 1;
+				std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU with " << readyQueue[0].getCPU() << "ms remaining " << queue(readyQueue, current) << std::endl;
 			}else{
+				context_switch += 1;
 				std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU " << queue(readyQueue, current) << std::endl;
 			}
 		}

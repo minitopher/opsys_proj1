@@ -15,6 +15,7 @@ void Process::add_process(const char PROC, const int INIT, const int CPU, const 
 	INIT_REPLACE = IO_TIME;
 	ARR = false;
 	pre = false;
+	WAITTIME = 0;
 }
 
 

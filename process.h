@@ -28,6 +28,9 @@ class Process{
 		int getTime(){
 			return INIT_ARR + (CPU_BURST * NUM_BURST) + (IO_TIME * NUM_BURST);
 		}
+		int getCPUReplace(){
+			return CPU_REPLACE;
+		}
 		void subINIT(){
 			INIT_ARR -= 1;
 		}
@@ -55,11 +58,9 @@ class Process{
 		void setPre(bool which){
 			pre = which;
 		}
-
 		void new_INIT(int time){
 			INIT_ARR = IO_TIME + time;
 		}
-
 		void sub_intCPU(int i){
 			if (CPU_BURST-i <= 0){
 				CPU_BURST = 0;
@@ -68,9 +69,14 @@ class Process{
 				CPU_BURST = CPU_BURST - i;
 			}
 		}
-		
 		int get_replaceCPU(){
 			return CPU_REPLACE;
+		}
+		void increaseWait(){
+			WAITTIME += 1;
+		}
+		double getWait(){
+			return WAITTIME;
 		}
 		
 		
@@ -84,4 +90,5 @@ class Process{
 		int INIT_REPLACE;
 		bool ARR;
 		bool pre;
+		double WAITTIME;
 };
