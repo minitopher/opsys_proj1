@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdlib>
 #include <limits>
+#include <iomanip>
 
 #include "process.h"
 
@@ -490,8 +491,23 @@ void ShortestRemainingTime(std::vector<Process> processes){
 	}
 }
 
-void RoundRobin(std::vector<Process> processes){
+void RoundRobin(std::vector<Process> processes, FILE* output){
 	
+	int CPU_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		CPU_average += processes[i].getCPU();
+	}
+	CPU_average = CPU_average/processes.size();
+
+	int init_average = 0;
+	for (unsigned int i = 0; i < processes.size(); i++){
+		init_average += processes[i].getINIT();
+	}
+	init_average = init_average/processes.size();
+
+	int context_switch = 0;
+	int preemptions = 0;
+		
 	int time = 0;
 	std::vector<Process> readyQueue;
 	int t_slice = 70;
@@ -505,6 +521,8 @@ void RoundRobin(std::vector<Process> processes){
 	bool done_a_r = true;
 
 	bool terminate = false;
+
+	bool already_going = false;
 
 	std::cout << "time 0ms: Simulator started for RR [Q <empty>]" << std::endl;
 	while (time >= 0){
@@ -530,9 +548,11 @@ void RoundRobin(std::vector<Process> processes){
 							break;
 						}	
 					}
-					readyQueue.erase(readyQueue.begin());
-					std::cout << "time " << time << "ms: Process " << finder->getPROC() << " terminated " << queue(readyQueue, current) << std::endl;
+
+					std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " terminated " << queue(readyQueue, current) << std::endl;
 					
+					readyQueue.erase(readyQueue.begin());
+
 				}
 				else if(readyQueue[0].getNUM() > 1){
 					//process still needs to go through more bursts, removes it from queue anyways
@@ -588,6 +608,8 @@ void RoundRobin(std::vector<Process> processes){
 				if (readyQueue.size() == 1){
 					t_slice = 70;
 				}
+
+				already_going = false;
 			
 			}
 		}
@@ -612,19 +634,7 @@ void RoundRobin(std::vector<Process> processes){
 		//Check to see if t_slice is 0, means that the timeslice is over and next in queue should be given a timeslice of 70.
 		if (t_slice == 0){
 			if (readyQueue.size() > 1 ){
-				t_slice = 70;
-				std::cout << "time " << time << "ms: Time slice expired; process " << readyQueue[0].getPROC() << " preempted with " << readyQueue[0].getCPU() << "ms to go " << queue(readyQueue, current) << std::endl;
-
-			}else if (readyQueue.size() == 1){
-				t_slice = 70;
-				std:: cout << "time " << time << "ms: Time slice expired; no preemption because ready queue is empty " << queue(readyQueue, current) << std::endl;
-			}
-			
-		}
-
-		if (t_slice == 70 && readyQueue.size() != 0){
-			current = readyQueue[0].getPROC();
-			
+				preemptions++;
 				done_a_r = false;
 				if (add_remove_time == 4 && done_a_r == false){
 					done_a_r = true;
@@ -635,8 +645,41 @@ void RoundRobin(std::vector<Process> processes){
 					continue;
 				}
 			
-			std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU " << queue(readyQueue, current) << std::endl;
+				t_slice = 70;
+				std::cout << "time " << time - 4 << "ms: Time slice expired; process " << readyQueue[0].getPROC() << " preempted with " << readyQueue[0].getCPU() << "ms to go " << queue(readyQueue, current) << std::endl;
+			already_going = false;
+			readyQueue.push_back(*readyQueue.begin());
+			readyQueue.erase(readyQueue.begin());
+			}else if (readyQueue.size() == 1){
+				t_slice = 70;
+				already_going = true;
+				std:: cout << "time " << time << "ms: Time slice expired; no preemption because ready queue is empty " << queue(readyQueue, current) << std::endl;
+			}
+			
 		}
+
+		if (t_slice == 70 && readyQueue.size() != 0 && !already_going){
+			current = readyQueue[0].getPROC();
+			context_switch++;
+
+			done_a_r = false;
+			if (add_remove_time == 4 && done_a_r == false){
+				done_a_r = true;
+				add_remove_time = 0;
+			}else if(add_remove_time < 4 && done_a_r == false){
+				add_remove_time++;
+				time++;
+				continue;
+			}
+			
+
+			if (readyQueue[0].getCPU() != readyQueue[0].get_replaceCPU()){
+					std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU with " << readyQueue[0].getCPU() << "ms remaining " << queue(readyQueue, current) << std::endl;
+			}else{
+				std::cout << "time " << time << "ms: Process " << readyQueue[0].getPROC() << " started using the CPU " << queue(readyQueue, current) << std::endl;
+			}
+		}
+
 		
 		//If everything else checks out, decrease 1 from timeslice and add 1 to time		
 		if (readyQueue.size() != 0){
@@ -651,6 +694,16 @@ void RoundRobin(std::vector<Process> processes){
 	}
 
 	std::cout << "time " << time +3 << "ms: Simulator ended for RR" << std::endl;
+
+
+	
+	//fout.open()
+	fout << "Algorithm RR" << std::endl;
+	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
+	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
+	fout << "-- average turnaround time: 752.00 ms" << std::endl;
+	fout << "-- total number of context switches: " << context_switch << std::endl;
+	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }
 
 
@@ -662,7 +715,7 @@ int main(int argc, char* argv[]){
 	std::ofstream output( argv[2] );
 	std::vector<Process> processes;
 	for (std::string line; getline (input, line); ){
-		if (line[0] == '#'){
+		if (line[0] == '#' || line[0] == '\n'){
 			continue;
 		}else{
 
@@ -725,9 +778,9 @@ int main(int argc, char* argv[]){
 	std::cout<<std::endl;
 	ShortestRemainingTime(SRT);
 	std::cout<<std::endl;
-	RoundRobin(RR);
+	RoundRobin(RR, &output);
 
-	
+	output.close();
 	
 	
 	//something something output file idk

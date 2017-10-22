@@ -69,6 +69,10 @@ class Process{
 			}
 		}
 		
+		int get_replaceCPU(){
+			return CPU_REPLACE;
+		}
+		
 		
 	private : 
 		char PROC_ID;
