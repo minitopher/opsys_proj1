@@ -56,7 +56,7 @@ std::string queue(std::vector<Process> processes, char current){
 	
 
 
-void FCFS(std::vector<Process> &processes){
+void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 	//First come first serve
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	int t_cs = 0;
@@ -236,8 +236,17 @@ void FCFS(std::vector<Process> &processes){
 			end = true;
 		}
 	}
+
+	fout << std::fixed;
+	fout << "Algorithm FCFS" << std::endl;
+	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
+	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
+	fout << "-- average turnaround time: placeholder number ms" << std::endl;
+	fout << "-- total number of context switches: " << "context_switch" << std::endl;
+	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
+	fout << std::endl;
 }
-void ShortestRemainingTime(std::vector<Process> processes){
+void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 	//Shortest Remaining Time
 	//MAKE A READY QUEUE AND ADD ALL PROCESS INTO IT
 	std::vector<Process> readyQueue;
@@ -489,21 +498,30 @@ void ShortestRemainingTime(std::vector<Process> processes){
 			end = true;
 		}
 	}
+
+	fout << std::fixed;
+	fout << "Algorithm SRT" << std::endl;
+	fout << "-- average CPU burst time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
+	fout << "-- average wait time: " /*<< std::setprecision(2)*/ << "placeholder number" << " ms" << std::endl;
+	fout << "-- average turnaround time: placeholder number ms" << std::endl;
+	fout << "-- total number of context switches: " << "context_switch" << std::endl;
+	fout << "-- total number of preemptions: " << "preemptions" << std::endl;
+	fout << std::endl;
 }
 
-void RoundRobin(std::vector<Process> processes, FILE* output){
+void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 	
-	int CPU_average = 0;
+	double CPU_average = 0;
 	for (unsigned int i = 0; i < processes.size(); i++){
-		CPU_average += processes[i].getCPU();
+		CPU_average += double(processes[i].getCPU());
 	}
-	CPU_average = CPU_average/processes.size();
+	CPU_average = CPU_average/double(processes.size());
 
-	int init_average = 0;
+	double init_average = 0;
 	for (unsigned int i = 0; i < processes.size(); i++){
-		init_average += processes[i].getINIT();
+		init_average += double(processes[i].getINIT());
 	}
-	init_average = init_average/processes.size();
+	init_average = init_average/double(processes.size());
 
 	int context_switch = 0;
 	int preemptions = 0;
@@ -660,7 +678,7 @@ void RoundRobin(std::vector<Process> processes, FILE* output){
 
 		if (t_slice == 70 && readyQueue.size() != 0 && !already_going){
 			current = readyQueue[0].getPROC();
-			context_switch++;
+			
 
 			done_a_r = false;
 			if (add_remove_time == 4 && done_a_r == false){
@@ -697,7 +715,7 @@ void RoundRobin(std::vector<Process> processes, FILE* output){
 
 
 	
-	//fout.open()
+	fout << std::fixed;
 	fout << "Algorithm RR" << std::endl;
 	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
 	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
@@ -774,11 +792,11 @@ int main(int argc, char* argv[]){
 	std::vector<Process> fcfs = processes;	//temp is a copy of processes, idk if this actually matters, but whatever
 	std::vector<Process> SRT = processes;
 	std::vector<Process> RR = processes;
-	FCFS(fcfs);	//goes through first come first serve
+	FCFS(fcfs, output);	//goes through first come first serve
 	std::cout<<std::endl;
-	ShortestRemainingTime(SRT);
+	ShortestRemainingTime(SRT, output);
 	std::cout<<std::endl;
-	RoundRobin(RR, &output);
+	RoundRobin(RR, output);
 
 	output.close();
 	
