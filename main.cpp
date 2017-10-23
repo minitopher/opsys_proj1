@@ -797,7 +797,7 @@ int main(int argc, char* argv[]){
 	std::ofstream output( argv[2] );
 	std::vector<Process> processes;
 	for (std::string line; getline (input, line); ){
-		if (line[0] == '#' || line[0] == '\n'){
+		if (line[0] == '#' || line[0] == '\n' || line[0] == ' ' || line.size() == 0){
 			continue;
 		}else{
 
