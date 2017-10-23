@@ -587,6 +587,8 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 
 	int context_switch = 0;
 	int preemptions = 0;
+	
+	float turn_time = CPU_average + init_average + 8;
 		
 	int time = 0;
 	std::vector<Process> readyQueue;
@@ -783,7 +785,7 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 	fout << "Algorithm RR" << std::endl;
 	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
 	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
-	fout << "-- average turnaround time: 752.00 ms" << std::endl;
+	fout << "-- average turnaround time: " << std::setprecision(2) << turn_time << std::endl;
 	fout << "-- total number of context switches: " << context_switch << std::endl;
 	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }
