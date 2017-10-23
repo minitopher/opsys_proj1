@@ -9,7 +9,7 @@
 
 #include "process.h"
 
-//Project members: leec21
+//Project members: leec21 hendrd
 
 
 int getSRT(std::vector<Process> queue, int newTime){
@@ -93,7 +93,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 				if(found == false){
 					readyQueue.push_back(*it);
 					if(it->hasARRIVED()){
-						std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
+						std::cout <<"time " << it->getNewTime() << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
 						std::vector<Process>::iterator write = readyQueue.begin();
 						if(write == readyQueue.end()){
 							std::cout << " <empty>";
@@ -227,6 +227,7 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 							finder->subNUM();
 							finder->replaceINIT();
 							temp = finder->getIO() + t_cs;
+							break;
 						}
 					}
 					write = readyQueue.begin();
@@ -243,7 +244,8 @@ void FCFS(std::vector<Process> &processes,  std::ofstream &fout){
 						}
 					}
 					std::cout<< "]" << std::endl;
-					t_cs += 3;
+					t_cs += 3;					
+					finder->setNewTime((temp + 4));
 					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
@@ -314,7 +316,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 					if( readyQueue.begin() == readyQueue.end()){		//if theres nothing in the queue yet just add it to the beginning
 						readyQueue.push_back(*it);
 						if(it->hasARRIVED()){
-							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
+							std::cout <<"time " << it->getNewTime() << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
 							std::vector<Process>::iterator write = readyQueue.begin();
 							if(write == readyQueue.end()){
 								std::cout << " <empty>";
@@ -360,7 +362,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 						}
 						if(location == readyQueue.size() - 1){
 							if(it->hasARRIVED()){
-								std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
+								std::cout <<"time " << it->getNewTime() << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
 								std::vector<Process>::iterator write = readyQueue.begin();
 								if(write == readyQueue.end()){
 									std::cout << " <empty>";
@@ -389,14 +391,14 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 						}
 						else{
 							if(it->hasARRIVED()){
-								std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O and will preempt ";
+								std::cout <<"time " << it->getNewTime() << "ms: Process "<< it->getPROC() << " completed I/O and will preempt ";
 								std::cout << timeHolder << " [Q";
 								std::vector<Process>::iterator write = readyQueue.begin();
-								if(readyQueue.size() == 1){
+								if(readyQueue.size() == 2){
 									std::cout<< " <empty>";
 								}
 								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
-									if(timeHolder != write->getPROC()){
+									if(timeHolder != write->getPROC() && it->getPROC() != write->getPROC()){
 										std::cout << " " << write->getPROC();
 									}
 								}
@@ -408,11 +410,11 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 								std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
 								std::cout << timeHolder << " [Q";
 								std::vector<Process>::iterator write = readyQueue.begin();
-								if(readyQueue.size() == 1){
+								if(readyQueue.size() == 2){
 									std::cout << " <empty>";
 								}
 								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
-									if(timeHolder != write->getPROC()){
+									if(timeHolder != write->getPROC() && it->getPROC() != write->getPROC()){
 										std::cout << " " << write->getPROC();
 									}
 								}
@@ -468,8 +470,8 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 			}
 			else if(timeHolder != holder->getPROC()){
 				timeHolder = holder->getPROC();
-				t_cs += 4;
 				context_switch++;
+				t_cs += 4;
 				std::cout <<"time " << t_cs << "ms: Process "<< holder->getPROC() << " started using the CPU ";
 				if(holder->isPreempted()){
 					std::cout << "with " << holder->getCPU() << "ms remaining ";
@@ -552,6 +554,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 							finder->subNUM();
 							finder->replaceINIT();
 							temp = finder->getIO() + t_cs;
+							break;
 						}
 					}
 					write = readyQueue.begin();
@@ -569,6 +572,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 					}
 					std::cout<< "]" << std::endl;
 					t_cs += 3;
+					finder->setNewTime(temp + 4);
 					timeHolder = '^';
 					readyQueue.erase(holder);
 				}
@@ -598,7 +602,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
 	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
 	fout << "-- average turnaround time: " << std::setprecision(2) << turn_avg << " ms" << std::endl;
-	fout << "-- total number of context switches: " << context_switch << " ms" << std::endl;
+	fout << "-- total number of context switches: " << context_switch << std::endl;
 	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }
 
@@ -816,7 +820,7 @@ void RoundRobin(std::vector<Process> processes, std::ofstream &fout){
 	fout << "Algorithm RR" << std::endl;
 	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
 	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
-	fout << "-- average turnaround time: " << std::setprecision(2) << turn_time << std::endl;
+	fout << "-- average turnaround time: " << std::setprecision(2) << turn_time << " ms"  << std::endl;
 	fout << "-- total number of context switches: " << context_switch << std::endl;
 	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }

@@ -78,6 +78,12 @@ class Process{
 		double getWait(){
 			return WAITTIME;
 		}
+		int getNewTime(){
+			return newTime;
+		}
+		void setNewTime(int time){
+			newTime = time;
+		}
 		
 		
 	private : 
@@ -91,4 +97,5 @@ class Process{
 		bool ARR;
 		bool pre;
 		double WAITTIME;
+		int newTime;
 };
