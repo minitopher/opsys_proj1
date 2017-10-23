@@ -598,7 +598,7 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 	fout << "-- average CPU burst time: " << std::setprecision(2) << CPU_average << " ms" << std::endl;
 	fout << "-- average wait time: " << std::setprecision(2) << init_average << " ms" << std::endl;
 	fout << "-- average turnaround time: " << std::setprecision(2) << turn_avg << " ms" << std::endl;
-	fout << "-- total number of context switches: " << context_switch << std::endl;
+	fout << "-- total number of context switches: " << context_switch << " ms" << std::endl;
 	fout << "-- total number of preemptions: " << preemptions << std::endl;
 }
 
