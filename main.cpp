@@ -342,46 +342,13 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 						}
 					}
 					else{
-						if(it->hasARRIVED()){
-							std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O and will preempt ";
-							std::cout << timeHolder << " [Q";
-							std::vector<Process>::iterator write = readyQueue.begin();
-							if(readyQueue.size() == 1){
-								std::cout<< " <empty>";
-							}
-							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
-								if(timeHolder != write->getPROC()){
-									std::cout << " " << write->getPROC();
-								}
-							}
-							std::cout<< "]" << std::endl;
-							preempted = true;
-							preemptions++;
-						}
-						else{
-							std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
-							std::cout << timeHolder << " [Q";
-							std::vector<Process>::iterator write = readyQueue.begin();
-							if(readyQueue.size() == 1){
-								std::cout << " <empty>";
-							}
-							for(write = readyQueue.begin(); write != readyQueue.end(); write++){
-								if(timeHolder != write->getPROC()){
-									std::cout << " " << write->getPROC();
-								}
-							}
-							std::cout<< "]" << std::endl;
-							it->setARRIVED();
-							preempted = true;
-							preemptions++;
-						}
-						int location = getSRT(readyQueue, it ->getCPU());		//find where the new process belongs in the queue
+						unsigned int location = getSRT(readyQueue, it ->getCPU());		//find where the new process belongs in the queue
 						std::vector<Process>::iterator iter = readyQueue.begin();
 						if (location == 0){										//If it ends up being the shortest amount of time, just add it to the front
 							readyQueue.insert(iter, *it);
 						}
 						else{
-							int count = 1;											//Else find that location and insert dat boi
+							unsigned int count = 1;											//Else find that location and insert dat boi
 							for(iter = readyQueue.begin(); iter != readyQueue.end(); iter++){
 								if(location == count){							
 									iter++;
@@ -389,6 +356,70 @@ void ShortestRemainingTime(std::vector<Process> processes, std::ofstream &fout){
 									break;
 								}
 								count++;
+							}
+						}
+						if(location == readyQueue.size() - 1){
+							if(it->hasARRIVED()){
+								std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O; added to ready queue [Q";
+								std::vector<Process>::iterator write = readyQueue.begin();
+								if(write == readyQueue.end()){
+									std::cout << " <empty>";
+								}
+								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+									if(timeHolder != write->getPROC()){
+										std::cout << " " << write->getPROC();
+									}
+								}
+								std::cout<< "]" << std::endl;
+							}
+							else{
+								std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and added to ready queue [Q";
+								std::vector<Process>::iterator write = readyQueue.begin();
+								if(write == readyQueue.end()){
+									std::cout << " <empty>";
+								}
+								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+									if(timeHolder != write->getPROC()){
+										std::cout << " " << write->getPROC();
+									}
+								}
+								std::cout<< "]" << std::endl;
+								it->setARRIVED();
+							}
+						}
+						else{
+							if(it->hasARRIVED()){
+								std::cout <<"time " << t_cs << "ms: Process "<< it->getPROC() << " completed I/O and will preempt ";
+								std::cout << timeHolder << " [Q";
+								std::vector<Process>::iterator write = readyQueue.begin();
+								if(readyQueue.size() == 1){
+									std::cout<< " <empty>";
+								}
+								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+									if(timeHolder != write->getPROC()){
+										std::cout << " " << write->getPROC();
+									}
+								}
+								std::cout<< "]" << std::endl;
+								preempted = true;
+								preemptions++;
+							}
+							else{
+								std::cout <<"time " << counter << "ms: Process "<< it->getPROC() << " arrived and will preempt ";
+								std::cout << timeHolder << " [Q";
+								std::vector<Process>::iterator write = readyQueue.begin();
+								if(readyQueue.size() == 1){
+									std::cout << " <empty>";
+								}
+								for(write = readyQueue.begin(); write != readyQueue.end(); write++){
+									if(timeHolder != write->getPROC()){
+										std::cout << " " << write->getPROC();
+									}
+								}
+								std::cout<< "]" << std::endl;
+								it->setARRIVED();
+								preempted = true;
+								preemptions++;
 							}
 						}
 					}
